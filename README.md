@@ -39,3 +39,18 @@ poetry shell
 ```
 
 There should be an indicator that looks a little like `dubdub/.venv/bin/activate` indicating that you're in the project.
+
+
+From there you just have to test running the repl. Simply run the command:
+
+```py
+dubdub
+```
+
+For now you should see the following statement:
+
+```python
+Welcome to python nano-REPL
+crtl-c to quit
+>>> 
+```
