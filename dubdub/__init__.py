@@ -1,3 +1,10 @@
-from ._help import dataclass
+from loguru import logger
+from pydantic import Field
 
-__version__ = '0.1.0'
+from ._help import GenConfig, dataclass
+
+__version__ = "0.1.0"
+
+
+def error(line: int, message: str):
+    logger.error(f"[line {line}] Error: {message}")
