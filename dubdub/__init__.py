@@ -1,5 +1,5 @@
 from loguru import logger
-from pydantic import Field
+from pydantic import Field, create_model
 
 from ._help import GenConfig, dataclass
 

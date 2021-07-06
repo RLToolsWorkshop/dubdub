@@ -21,15 +21,26 @@ class Scanner:
 
     src_len: int = 0
 
+    # Variable to determine if we should move the start cursor on update
+    is_jump: bool = False
+
     def __post_init__(self):
         self.src_len = len(self.source)
-        # print(self.birth)
 
-    def inc(self):
+    @property
+    def next_curr(self) -> int:
+        return self.current + 1
+
+    @property
+    def idx_len(self) -> int:
+        return self.src_len - 1
+
+    def inc(self) -> int:
         """
         Increments the current cursor .
         """
         self.current += 1
+        return self.current
 
     def log_idx(self):
         print("-------------------")
@@ -44,7 +55,7 @@ class Scanner:
         Returns:
             bool: If end of source file.
         """
-        return self.current >= (self.src_len - 1)
+        return self.current >= self.idx_len
 
     def advance(self) -> str:
         """
@@ -53,8 +64,8 @@ class Scanner:
         Returns:
             str: The next character
         """
-        self.inc()
-        return self.source[self.current]
+
+        return self.source[min(self.inc(), self.idx_len)]
 
     @dispatch
     def add_token(self, token_type: TokenType):
@@ -75,7 +86,7 @@ class Scanner:
             token_type (TokenType): The TokenType Enum
             literal (Any): The literal text
         """
-        lexeme_val: str = self.source[self.start : self.current]
+        lexeme_val: str = self.source[self.start : self.next_curr]
         self.tokens.append(
             Token(
                 token_type=token_type,
@@ -97,7 +108,7 @@ class Scanner:
         """
         if self.is_end():
             return False
-        if self.source[self.current] != expected:
+        if self.source[self.next_curr] != expected:
             return False
 
         self.inc()
@@ -178,10 +189,13 @@ class _Scanner(Scanner):
             return False
 
         double_check: Tuple[str, TokenType, TokenType] = double_chars.get(char)
-        resp_type: TokenType = (
-            double_check[1] if self.match(double_check[0]) else double_check[2]
-        )
+        is_match = self.match(double_check[0])
+        resp_type: Optional[TokenType] = double_check[2]
+        if is_match:
+            resp_type: TokenType = double_check[1]
+
         self.add_token(resp_type)
+
         return True
 
     def comment_token(self, char: str) -> bool:
@@ -235,22 +249,24 @@ class Scanner(_Scanner):
         if self.peek() == "." and self.is_digit(self.peek_next()):
             self.advance()
             # Basically the last peek expression all over again.
-            while self.is_digit(self.peek()):
+            while self.peek_next().isdigit():
                 self.advance()
-        num_value: str = self.source[self.start : self.current]
+        num_value: str = self.source[self.start : self.next_curr]
         self.add_token(TokenType.NUMBER, float(num_value))
 
     def identity_scan(self):
         # Keep scanning until we reach non-alphanum
-        while self.peek().isalnum():
+
+        while self.peek_next().isalnum():
             self.advance()
 
-        identifier: str = self.source[self.start : self.current]
+        identifier: str = self.source[self.start : self.next_curr]
         token_type: Optional[TokenType] = KEYWORDS.get(identifier, None)
 
         # Replace the token type with the identifier type if it's not a key word
         if not token_type:
             token_type = TokenType.IDENTIFIER
+
         self.add_token(token_type)
 
     def scan_token(self):
@@ -262,15 +278,16 @@ class Scanner(_Scanner):
         # If any tokens were added to the set we exit this function.
 
         if self.is_ignorable(char):
+            self.is_jump = True
             return
-        if self.single_token(char):
+        elif self.comment_token(char):
             return
-        if self.double_token(char):
+        elif self.single_token(char):
             return
-        if self.comment_token(char):
+        elif self.double_token(char):
             return
 
-        if char == '"':
+        elif char == '"':
             if self.string_scan():
                 return
         else:
@@ -281,7 +298,11 @@ class Scanner(_Scanner):
             else:
                 dubdub.error(self.line, "Unexpected character.")
 
-        dubdub.error(self.line, "Unexpected character.")
+    def update_start(self):
+        self.start = self.current
+        if self.is_jump:
+            self.start += 1
+            self.is_jump = False
 
     def scan_tokens(self) -> List[Token]:
         """
@@ -290,10 +311,8 @@ class Scanner(_Scanner):
         Returns:
             List[Token]: List of tokens
         """
-
         while not self.is_end():
-            self.log_idx()
-            self.start = self.current
+            self.update_start()
             self.scan_token()
 
         self.tokens.append(Token(TokenType.EOF, "", None, self.line))
