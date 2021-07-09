@@ -7,13 +7,8 @@ from rich import print
 from ward import test
 
 
-@test("the list contains 42")
-def _():
-    assert 42 in [-21, 42, 999]
-
-
 @test("There's 4 tokens")
-def test_single_bracket():
+def test_ignorable():
 
     nested_scopes = "var hello = 1234.456"
     simple_scanner = Scanner(source=nested_scopes)
@@ -30,3 +25,11 @@ def test_single_bracket():
     assert simple_scanner.is_ignorable(" "), "The space isn't ignored"
     tokens: List[Token] = simple_scanner.scan_tokens()
     assert len(tokens) > 0, "No tokens were extracted."
+
+
+@test("Extract parentheses from number.")
+def test_full_expression():
+    parenthesis_expr = "(10 * 12 + (1 + 1))"
+    scanner = Scanner(source=parenthesis_expr)
+    tokens: List[Token] = scanner.scan_tokens()
+    assert len(tokens) == 11

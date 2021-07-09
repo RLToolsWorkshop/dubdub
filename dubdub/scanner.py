@@ -22,6 +22,7 @@ class Scanner:
 
     # Variable to determine if we should move the start cursor on update
     is_jump: bool = False
+    is_start: bool = False
 
     def __post_init__(self):
         self.src_len = len(self.source)
@@ -33,6 +34,9 @@ class Scanner:
     @property
     def idx_len(self) -> int:
         return self.src_len - 1
+
+    def peek_start(self):
+        return self.source[self.start]
 
     def inc(self) -> int:
         """
@@ -63,7 +67,10 @@ class Scanner:
         Returns:
             str: The next character
         """
-
+        if self.current == 0 and not self.is_start:
+            self.is_start = True
+            self.is_jump = True
+            return self.source[0]
         return self.source[min(self.inc(), self.idx_len)]
 
     @dispatch
@@ -252,10 +259,10 @@ class Scanner(_Scanner):
             # Basically the last peek expression all over again.
             while self.peek_next().isdigit():
                 self.advance()
-        if self.source[self.next_curr] != " ":
-            num_value: str = self.source[self.start : self.current]
-        else:
-            num_value: str = self.source[self.start : self.next_curr]
+        start_idx: int = self.start
+        if not self.peek_start().isdigit():
+            start_idx += 1
+        num_value: str = self.source[start_idx : self.current]
         self.add_token(TokenType.NUMBER, float(num_value))
 
     def identity_scan(self):
