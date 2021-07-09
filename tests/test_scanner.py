@@ -1,7 +1,7 @@
 from typing import List
 from unittest.mock import MagicMock, patch
 
-from dubdub.primatives import Token
+from dubdub import Token
 from dubdub.scanner import Scanner
 from rich import print
 from ward import test

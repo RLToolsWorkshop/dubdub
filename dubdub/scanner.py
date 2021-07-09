@@ -5,8 +5,7 @@ from loguru import logger
 from plum import dispatch
 
 import dubdub
-from dubdub import Field, GenConfig, dataclass
-from dubdub.primatives import KEYWORDS, Token, TokenType
+from dubdub import KEYWORDS, Field, GenConfig, Token, TokenType, dataclass
 
 
 @dataclass(config=GenConfig)
@@ -153,6 +152,7 @@ class _Scanner(Scanner):
         Returns:
             bool: Returns true if we added a token in this function.
         """
+        logger.info(char)
         single_chars = {
             "(": TokenType.LEFT_PAREN,
             ")": TokenType.RIGHT_PAREN,
@@ -165,7 +165,7 @@ class _Scanner(Scanner):
             ";": TokenType.SEMICOLON,
             "*": TokenType.STAR,
         }
-        if char not in single_chars:
+        if char not in single_chars.keys():
             return False
 
         token_type = single_chars.get(char)
