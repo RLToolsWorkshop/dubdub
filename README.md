@@ -1,5 +1,11 @@
 # DubDub
 
+
+*A langugage built for your to become really strong programmers. [Docs here](./docs/intro.md)*.
+
+----
+
+
 A toy programming language the group is writing in **Python**, **Rust**, then eventually **TVM**. The main goal of the language is to learn from the [interpreters book](https://www.craftinginterpreters.com/). By writing the language we'll increase our mean knowledge in data structures and symbolic programming.
 
 This will make for a more effective programmer that will be able to execute on all further developments. In order to ensure we're running the code with consistency we'll enforce typing onto the codebase using a combination of dataclasses and pydantic.

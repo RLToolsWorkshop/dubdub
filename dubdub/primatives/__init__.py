@@ -1,4 +1,5 @@
-from .nodes import Token
+from .nodes import Node, Token, Visitor
+from .operations import Binary, Expr, Grouping, Literal, Unary
 from .types import TokenType
 
 KEYWORDS = {

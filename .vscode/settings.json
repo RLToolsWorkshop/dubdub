@@ -98,5 +98,11 @@
         "**/.history/": true,
         "**/.history": true,
         "**/.ionide": true
+    },
+    "files.associations": {
+        "**/.venv": "python",
+        "*.ddub": "javascript",
+        "*.ttml": "xml",
+        "*.ttss": "css"
     }
 }

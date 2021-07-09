@@ -5,8 +5,7 @@ from loguru import logger
 from plum import dispatch
 
 import dubdub
-from dubdub import Field, GenConfig, dataclass
-from dubdub.primatives import KEYWORDS, Token, TokenType
+from dubdub import KEYWORDS, Field, GenConfig, Token, TokenType, dataclass
 
 
 @dataclass(config=GenConfig)
@@ -23,6 +22,7 @@ class Scanner:
 
     # Variable to determine if we should move the start cursor on update
     is_jump: bool = False
+    is_start: bool = False
 
     def __post_init__(self):
         self.src_len = len(self.source)
@@ -33,7 +33,10 @@ class Scanner:
 
     @property
     def idx_len(self) -> int:
-        return self.src_len - 1
+        return self.src_len
+
+    def peek_start(self):
+        return self.source[self.start]
 
     def inc(self) -> int:
         """
@@ -64,8 +67,11 @@ class Scanner:
         Returns:
             str: The next character
         """
-
-        return self.source[min(self.inc(), self.idx_len)]
+        if self.current == 0 and not self.is_start:
+            self.is_start = True
+            self.is_jump = True
+            return self.source[0]
+        return self.source[min(self.inc(), self.idx_len - 1)]
 
     @dispatch
     def add_token(self, token_type: TokenType):
@@ -153,6 +159,7 @@ class _Scanner(Scanner):
         Returns:
             bool: Returns true if we added a token in this function.
         """
+        # logger.info(char)
         single_chars = {
             "(": TokenType.LEFT_PAREN,
             ")": TokenType.RIGHT_PAREN,
@@ -165,12 +172,12 @@ class _Scanner(Scanner):
             ";": TokenType.SEMICOLON,
             "*": TokenType.STAR,
         }
-        if char not in single_chars:
-            return False
 
-        token_type = single_chars.get(char)
-        self.add_token(token_type)
-        return True
+        if char in single_chars.keys():
+            token_type = single_chars.get(char)
+            self.add_token(token_type)
+            return True
+        return False
 
     def double_token(self, char: str) -> bool:
         """
@@ -224,7 +231,7 @@ class _Scanner(Scanner):
 class Scanner(_Scanner):
     def string_scan(self) -> None:
         # When you see this kind of while loop it's searching for something to close the open string.
-        while self.peek() != '"' and (not self.is_end()):
+        while self.peek_next() != '"' and (not self.is_end()):
             if self.peek() == "\n":
                 self.line += 1
             self.advance()
@@ -235,8 +242,12 @@ class Scanner(_Scanner):
 
         self.advance()
 
-        value = self.source[self.start + 1 : self.current - 1]
+        self.start += 1
+        value = self.source[self.start : self.current]
+        self.current -= 1
         self.add_token(TokenType.STRING, value)
+        self.start -= 1
+        self.current += 1
         return True
 
     def number_scan(self):
@@ -251,13 +262,25 @@ class Scanner(_Scanner):
             # Basically the last peek expression all over again.
             while self.peek_next().isdigit():
                 self.advance()
-        num_value: str = self.source[self.start : self.next_curr]
+        start_idx: int = self.start
+        end_idx: int = self.current
+        if not self.peek_start().isdigit():
+            start_idx += 1
+
+        if self.peek().isdigit():
+            end_idx += 1
+
+        num_value: str = self.source[start_idx:end_idx]
+
         self.add_token(TokenType.NUMBER, float(num_value))
+
+    def isalnum(self, value: str):
+        return value.isalnum() or value == "_"
 
     def identity_scan(self):
         # Keep scanning until we reach non-alphanum
 
-        while self.peek_next().isalnum():
+        while self.isalnum(self.peek_next()):
             self.advance()
 
         identifier: str = self.source[self.start : self.next_curr]
@@ -314,6 +337,8 @@ class Scanner(_Scanner):
         while not self.is_end():
             self.update_start()
             self.scan_token()
+            if self.peek_next() == "\0":
+                break
 
         self.tokens.append(Token(TokenType.EOF, "", None, self.line))
         return self.tokens
@@ -322,7 +347,7 @@ class Scanner(_Scanner):
 def step():
     from rich import print
 
-    nested_scopes = "var hello = 1234.456"
+    nested_scopes = "var hello = 1234.456;"
     scanner = Scanner(source=nested_scopes)
     tokens: List[Token] = scanner.scan_tokens()
     print(tokens)
