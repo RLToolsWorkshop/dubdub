@@ -1,3 +1,4 @@
+from dataclasses import field
 from typing import List
 
 from loguru import logger
@@ -15,6 +16,7 @@ from dubdub.types import TokenType
 class Parser:
     tokens: List[Token]
     current: int = 0
+    statements: List[Token] = field(default_factory=lambda: [])
 
     def peek(self) -> Token:
         return self.tokens[self.current]
@@ -52,14 +54,10 @@ class Parser:
     def consume(self, token_type: TokenType, message: str) -> Token:
         if self.check(token_type):
             return self.advance()
-        raise ParserError(self.peek(), "Expect ')' after expression.")
+        raise ParserError(self.peek(), message)
 
 
-@dataclass
-class __ParserGrammar(Parser):
-    def expression(self):
-        return self.equality()
-
+class __OpGrammar(Parser):
     def equality(self) -> Expr:
         expr: Expr = self.comparison()
 
@@ -139,15 +137,60 @@ class __ParserGrammar(Parser):
 
 
 @dataclass
-class Parser(__ParserGrammar):
+class __StatementGrammar(__OpGrammar):
+    def expression(self):
+        return self.equality()
+
+    def statement(self) -> Stmt:
+        if self.match(TokenType.PRINT):
+            return self.print_statement()
+        return self.expression_statement()
+
+    def print_statement(self):
+        value: Expr = self.expression()
+        self.consume(TokenType.SEMICOLON, "Expect ';' after value.")
+        return Print(value)
+
+    def expression_statement(self) -> Stmt:
+        value: Expr = self.expression()
+        self.consume(TokenType.SEMICOLON, "Expect ';' after expression.")
+        return ExpressionStmt(value)
+
+    def var_declaration(self) -> Stmt:
+        name: Token = self.consume(TokenType.IDENTIFIER, "expected variable name.")
+
+        if self.match(TokenType.EQUAL):
+            initializer = self.expression
+        self.consume(TokenType.SEMICOLON, "Expect ';' after expression.")
+        return Var(value)
+
+
+@dataclass
+class Parser(__StatementGrammar):
+    # def parse(self):
+    #     try:
+    #         return self.expression()
+    #     except ParserError as pe:
+    #         logger.exception(pe)
+    #     except Exception as e:
+    #         logger.exception(e)
+    #         raise e
+
     def parse(self):
-        try:
-            return self.expression()
-        except ParserError as pe:
-            logger.exception(pe)
-        except Exception as e:
-            logger.exception(e)
-            raise e
+        statements = []
+
+        while not self.is_end():
+            print(self.peek())
+            statements.append(self.statement())
+        logger.success(statements)
+        return statements
+        # try:
+        #     return self.expression()
+        # except ParserError as pe:
+        #     logger.exception(pe)
+        # except Exception as e:
+        #     logger.exception(e)
+        #     raise e
 
 
 def main():

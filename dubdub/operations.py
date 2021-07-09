@@ -17,6 +17,11 @@ class Expr(Node):
 
 
 @dataclass
+class Stmt(Node):
+    pass
+
+
+@dataclass
 class Binary(Expr):
     left: Expr
     right: Expr
@@ -39,7 +44,46 @@ class Unary(Expr):
     token: Token
 
 
-__all__ = ["Expr", "Binary", "Grouping", "Literal", "Unary"]
+@dataclass
+class ExpressionStmt(Stmt):
+    expression: Expr
+
+
+@dataclass
+class Print(Stmt):
+    expression: Expr
+
+
+@dataclass
+class Var(Stmt):
+    name: Token
+    initializer: Expr
+
+
+@dataclass
+class Variable(Stmt):
+    """
+    A way to access the variables.
+
+    Args:
+        Stmt ([type]): [description]
+    """
+
+    name: Token
+
+
+__all__ = [
+    "Expr",
+    "Binary",
+    "Grouping",
+    "Literal",
+    "Unary",
+    "Print",
+    "ExpressionStmt",
+    "Stmt",
+    "Var",
+    "Variable"
+]
 
 
 if __name__ == "__main__":

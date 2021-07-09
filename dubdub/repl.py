@@ -32,6 +32,7 @@ failure = lambda input: f"{Fore.RED}{input}"
 def scan_and_parse(line: str):
     scanner = Scanner(source=line)
     tokens: List[Token] = scanner.scan_tokens()
+    print(tokens)
 
     parser = Parser(tokens=tokens)
     parsed = parser.parse()
@@ -39,7 +40,6 @@ def scan_and_parse(line: str):
     interp = Intepreter()
     response = interp.visit(parsed)
 
-    print(tokens)
     print(parsed)
     print(response)
 

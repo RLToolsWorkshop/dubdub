@@ -18,6 +18,7 @@ from dubdub import (
     Visitor,
     dataclass,
 )
+from dubdub.operations import ExpressionStmt, Print, Stmt
 from dubdub.parser import Parser
 from dubdub.scanner import Scanner
 
@@ -90,26 +91,38 @@ class Intepreter(Visitor):
     def visit_token(self, node: "Token"):
         logger.debug("Visiting a token")
 
+    def visit_expression_stmt(self, stmt: ExpressionStmt):
+        return self.evaluate(stmt.expression)
+
+    def visit_print(self, print_stmt: Print):
+        value = self.evaluate(print_stmt.expression)
+        print(str(value))
+
     def evaluate(self, node: "Node") -> Any:
         return self.visit(node)
+
+    def intepret(self, statements: List[Stmt]):
+        for stmt in statements:
+            self.evaluate(stmt)
 
 
 def main():
     # nested_scopes = "var hello = 1234.456;"
     # Note: The scanner has a index bug. Will need to solve it at some point.
-    nested_scopes = " 10 * 12 + ( 1 + 1 ) "
+    # nested_scopes = " 10 * 12 + ( 1 + 1 ) "
+    nested_scopes = "( 100 == 100 )"
     scanner = Scanner(source=nested_scopes)
     tokens: List[Token] = scanner.scan_tokens()
+    print(tokens)
 
     parser = Parser(tokens=tokens)
-    parsed = parser.parse()
+    parsed_stmts = parser.parse()
 
     interp = Intepreter()
-    print(tokens)
-    print(parsed)
+    print(parsed_stmts)
 
-    resp = interp.visit(parsed)
-    print(resp)
+    # resp = interp.intepret(parsed_stmts)
+    # print(resp)
 
 
 if __name__ == "__main__":
