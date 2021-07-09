@@ -152,7 +152,7 @@ class _Scanner(Scanner):
         Returns:
             bool: Returns true if we added a token in this function.
         """
-        logger.info(char)
+        # logger.info(char)
         single_chars = {
             "(": TokenType.LEFT_PAREN,
             ")": TokenType.RIGHT_PAREN,
@@ -165,12 +165,13 @@ class _Scanner(Scanner):
             ";": TokenType.SEMICOLON,
             "*": TokenType.STAR,
         }
-        if char not in single_chars.keys():
-            return False
 
-        token_type = single_chars.get(char)
-        self.add_token(token_type)
-        return True
+        if char in single_chars.keys():
+            token_type = single_chars.get(char)
+            logger.warning(token_type)
+            self.add_token(token_type)
+            return True
+        return False
 
     def double_token(self, char: str) -> bool:
         """
@@ -251,7 +252,10 @@ class Scanner(_Scanner):
             # Basically the last peek expression all over again.
             while self.peek_next().isdigit():
                 self.advance()
-        num_value: str = self.source[self.start : self.next_curr]
+        if self.source[self.next_curr] != " ":
+            num_value: str = self.source[self.start : self.current]
+        else:
+            num_value: str = self.source[self.start : self.next_curr]
         self.add_token(TokenType.NUMBER, float(num_value))
 
     def identity_scan(self):

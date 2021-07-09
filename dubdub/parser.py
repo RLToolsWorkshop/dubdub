@@ -132,7 +132,7 @@ class __ParserGrammar(Parser):
             return Literal(value=self.previous().literal)
         elif self.match(TokenType.LEFT_PAREN):
             expr: Expr = self.expression()
-            self.consume(TokenType.RIGHT_PAREN)
+            self.consume(TokenType.RIGHT_PAREN, "Missing right parenthesis")
             return Grouping(expression=expr)
 
         raise ParserError(self.peek(), "Expected expression.")
@@ -152,14 +152,14 @@ class Parser(__ParserGrammar):
 
 def main():
     # nested_scopes = "var hello = 1234.456;"
-    nested_scopes = "let x = 4 * (10 * 123)"
+    nested_scopes = "( 10 * 12 + ( 1 + 1 ) )"
     scanner = Scanner(source=nested_scopes)
     tokens: List[Token] = scanner.scan_tokens()
-    print(tokens)
-    # parser = Parser(tokens=tokens)
-    # parsed = parser.parse()
     # print(tokens)
-    # print(parsed)
+    parser = Parser(tokens=tokens)
+    parsed = parser.parse()
+    print(tokens)
+    print(parsed)
 
 
 if __name__ == "__main__":
