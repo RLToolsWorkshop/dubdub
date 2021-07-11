@@ -2,7 +2,7 @@ from typing import List
 
 from devtools import debug
 from dubdub import Token
-from dubdub.interpreter import Intepreter
+from dubdub.interpreter import Interpreter
 from dubdub.parser import Parser
 from dubdub.scanner import Scanner
 from loguru import logger
@@ -18,7 +18,7 @@ def process_print(input_text: str):
     parsed_stmts = parser.parse()
     assert True, "We haven't reached this point yet."
 
-    interpreter = Intepreter()
+    interpreter = Interpreter()
     interpreted = interpreter.intepret(parsed_stmts)
     return tokens, parsed_stmts, interpreted
 
@@ -60,7 +60,7 @@ def main():
     parsed_stmts = parser.parse()
     print(parsed_stmts)
 
-    interpreter = Intepreter()
+    interpreter = Interpreter()
     interpreter.intepret(parsed_stmts)
     print(parsed_stmts)
 
