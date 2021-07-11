@@ -147,10 +147,10 @@ class Interpreter(__Interpreter):
         else:
             self.globals.assign(expr.name, value)
 
-        return self.environment.assign(expr.name, value)
+        return value
 
-    def visit_block_stmt(self, stmt: Block):
-        self.execute_block(stmt, Environment(self.environment))
+    def visit_block_stmt(self, stmt: Block) -> None:
+        self.execute_block(stmt.stmts, Environment(enclosing=self.environment))
 
     def visit_if_stmt(self, stmt: If):
         if self.is_truthy(self.evaluate(stmt.condition)):
