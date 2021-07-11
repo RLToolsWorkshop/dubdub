@@ -1,8 +1,9 @@
 import abc
+import time
 from ast import Dict
 from datetime import datetime
 from pathlib import Path
-from typing import Any, List
+from typing import Any, List, Optional, cast
 
 from loguru import logger
 from rich import print
@@ -18,7 +19,10 @@ from dubdub import (
     Visitor,
     dataclass,
 )
-from dubdub.operations import ExpressionStmt, Print, Stmt
+from dubdub.callables import *
+from dubdub.dubcall import DubCallable
+from dubdub.env import Environment
+from dubdub.operations import *
 from dubdub.parser import Parser
 from dubdub.scanner import Scanner
 
@@ -26,7 +30,25 @@ CWD_DIR = Path.cwd()
 
 
 @dataclass
-class Intepreter(Visitor):
+class __Interpreter(Visitor):
+    environment: Optional[Environment] = None
+    globals: Environment = Environment()
+    locals: Dict[Expr, int] = field(default_factory={})
+
+    def resolve(self, expr: Expr, depth: int):
+        self.locals[expr] = depth
+        return
+
+    def look_up_variable(self, name: Token, expr: Expr):
+        distance = self.locals.get(expr, None)
+        if distance is not None:
+            return self.environment.get_at(distance, name.lexeme)
+        return self.globals.get(name)
+
+    def __post_init__(self):
+        self.globals.define("clock", Clock())
+        self.environment = self.globals
+
     def is_truthy(self, value: Any) -> bool:
         if value is None:
             return False
@@ -39,6 +61,8 @@ class Intepreter(Visitor):
     def is_equal(self, first: Any, second: Any) -> bool:
         return first == second
 
+
+class __Interpreter(__Interpreter):
     def visit_binary(self, expr: "Binary"):
         left = self.evaluate(expr.left)
         right = self.evaluate(expr.right)
@@ -101,9 +125,115 @@ class Intepreter(Visitor):
     def evaluate(self, node: "Node") -> Any:
         return self.visit(node)
 
-    def intepret(self, statements: List[Stmt]):
-        for stmt in statements:
-            self.evaluate(stmt)
+
+class Interpreter(__Interpreter):
+    """Statement managment"""
+
+    def visit_var_stmt(self, stmt: "Var"):
+        value = None
+        if stmt.initializer is not None:
+            value = self.evaluate(stmt.initializer)
+
+        self.environment.define(stmt.name, value)
+
+    def visit_variable_expr(self, expr: Variable) -> Any:
+        return self.environment.get(expr.name)
+
+    def visit_assign_expr(self, expr: Assign):
+        value = self.evaluate(expr.value)
+        distance = self.locals.get(expr, None)
+        if distance:
+            self.environment.assign_at(distance, expr.name, value)
+        else:
+            self.globals.assign(expr.name, value)
+
+        return self.environment.assign(expr.name, value)
+
+    def visit_block_stmt(self, stmt: Block):
+        self.execute_block(stmt, Environment(self.environment))
+
+    def visit_if_stmt(self, stmt: If):
+        if self.is_truthy(self.evaluate(stmt.condition)):
+            self.evaluate(stmt.then_branch)
+        elif stmt.else_branch is not None:
+            self.evaluate(stmt.else_branch)
+
+    def visit_logical_expr(self, expr: Binary):
+        """
+        The concept is a bit complex. Though we're saying the following rules:
+
+        1. if the statement is an OR statement, and the first is true, the conditions are met. Skip the next check.
+        2. If the statement is and AND statement, and the first condition is true.
+            1. Then you must check the second condition because both must be true.
+            2. Otherwise, if the first condition is false, skip it. All of it is false then.
+
+        Args:
+            expr (Binary): This the comparison statement overall.
+
+        Returns:
+            bool: Hopefully returns a boolean type.
+        """
+        left = self.evaluate(expr.left)
+        if expr.token.token_type == TokenType.OR:
+            if self.is_truthy(left):
+                return left
+        else:
+            if not self.is_truthy(left):
+                return left
+        return self.evaluate(expr.right)
+
+    def visit_while_stmt(self, stmt: Stmt):
+        while self.is_truthy(self.evaluate(stmt.condition)):
+            self.execute(stmt.body)
+
+    def visit_call_expr(self, expr: Call):
+        callee = self.evaluate(expr.callee)
+
+        args = []
+        for arg in expr.arguments:
+            args.append(self.evaluate(arg))
+        if not isinstance(expr.paren, DubCallable):
+            raise RuntimeError("Can only call functions and classes")
+
+        func = cast(DubCallable, callee)
+        size = func.arity()
+        arg_count = len(args)
+        if arg_count != size:
+            raise RuntimeError(f"expected {size} arguments but got {arg_count}")
+
+        return func.call(self, *args)
+
+    def visit_function_stmt(self, stmt: Function):
+        function: DubFunction = DubFunction(stmt, self.environment)
+        self.environment.define(stmt.name.lexeme, function)
+
+    def visit_return_stmt(self, stmt: Stmt):
+        value = None
+        if stmt.value is not None:
+            value = self.evaluate(stmt.value)
+        raise ReturnErr(value)
+
+    #
+
+    def execute_block(self, stmts: List[Stmt], environment: Environment):
+        previous = self.env
+        try:
+            self.env = environment
+
+            for stmt in stmts:
+                self.evaluate(stmt)
+        except Exception as e:
+            raise e
+        finally:
+            self.env = previous
+
+    def intepret(self, stmts: List[Stmt]):
+
+        try:
+            for stmt in stmts:
+                self.evaluate(stmt)
+        except Exception as e:
+            raise e
 
 
 def main():
@@ -118,7 +248,7 @@ def main():
     parser = Parser(tokens=tokens)
     parsed_stmts = parser.parse()
 
-    interp = Intepreter()
+    interp = Interpreter()
     print(parsed_stmts)
 
     # resp = interp.intepret(parsed_stmts)

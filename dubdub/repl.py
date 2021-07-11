@@ -19,7 +19,7 @@ from dubdub import (
     Visitor,
     dataclass,
 )
-from dubdub.interpreter import Intepreter
+from dubdub.interpreter import Interpreter
 from dubdub.parser import Parser
 from dubdub.scanner import Scanner
 
@@ -37,7 +37,7 @@ def scan_and_parse(line: str):
     parser = Parser(tokens=tokens)
     parsed = parser.parse()
 
-    interp = Intepreter()
+    interp = Interpreter()
     response = interp.visit(parsed)
 
     print(parsed)
