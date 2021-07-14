@@ -1,10 +1,11 @@
 import abc
 from typing import Any, AnyStr
 
-from dubdub import dataclass
-from dubdub.types import TokenType
 from inflection import underscore
 from loguru import logger
+
+from dubdub import dataclass
+from dubdub.types import TokenType
 
 
 @dataclass
@@ -21,7 +22,7 @@ class Node(abc.ABC):
     def ltag(self) -> str:
         return f"leave_{self.cls_name}"
 
-    def visit(self, visitor: "Visitor"):
+    def visit(self, visitor: "Visitor") -> None:
         visitor.visit(self)
 
 
@@ -60,15 +61,15 @@ class Token(Node):
 
 
 class PrintVisitor(Visitor):
-    def on_visit(self, node: Node):
+    def on_visit(self, node: Node) -> None:
         logger.warning(f"Printing {node.vname}")
         super().on_visit(node)
 
-    def visit_token(self, node: "Node"):
+    def visit_token(self, node: "Node") -> None:
         logger.debug("Visiting a token")
 
 
-def main():
+def main() -> None:
     nand_token = Token(token_type=TokenType.AND, lexeme="and", literal="and", line=1)
     print_visit = PrintVisitor()
     print_visit.visit(nand_token)

@@ -60,3 +60,12 @@ Welcome to python nano-REPL
 crtl-c to quit
 >>> 
 ```
+
+
+
+
+## Next Steps
+
+We'll have variants of the programming language. The variants of the programming language will be in other repositories. You'll see something that starts with `dub` and it'll end with some uncreative name.
+
+<!-- We're going to start modifying the language by using it for compiling -->

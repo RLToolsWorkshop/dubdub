@@ -180,9 +180,7 @@ class Parser(__StatementGrammar):
         statements = []
 
         while not self.is_end():
-            print(self.peek())
             statements.append(self.statement())
-        logger.success(statements)
         return statements
         # try:
         #     return self.expression()

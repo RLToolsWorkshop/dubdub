@@ -1,16 +1,17 @@
 ?start: (declaration | _NL) *
 
 
-?declaration: func_dec 
+?declaration: class_dec
+            | func_dec 
             | var_dec
             | statement
 
 // Declarations
 // Deciding to put declarations all into one place to prevent confusion.
 
-var_dec: "var" NAME ("=" expr)? ";" 
-func_dec: "fun" function ";"
-
+var_dec: "var" IDENTIFIER ("=" expr)? ";" 
+func_dec: "fun" function ";"?
+class_dec: "class" IDENTIFIER ( "<" IDENTIFIER )? "{" function* "}"
 
 
 ?statement: end_comma_stmt
@@ -38,7 +39,7 @@ call_stmt: call ";" ";"
 
 // Assignment operators 
 
-assignment: ( call "." )? NAME "=" assignment
+assignment: ( call "." )? IDENTIFIER "=" assignment
     | logic_or
 
 
@@ -50,8 +51,9 @@ assignment: ( call "." )? NAME "=" assignment
     | complex_expr "+" product   -> add
     | complex_expr "-" product   -> sub
 
-?product: unary ( ( "/" | "*" ) unary )*
-
+?product: call
+    | product "*" call  -> mul
+    | product "/" call  -> div
 
 ?logic_or: (logic_and) ("or" logic_and)* 
 ?logic_and: logic_not ("and" logic_not)*
@@ -59,19 +61,19 @@ assignment: ( call "." )? NAME "=" assignment
          | comparison 
 ?comparison: complex_expr (_comp_op complex_expr)*
 
-unary: unary | call
-call: atom ("(" arguments? ")" | "." NAME)*
+
+call: atom ("(" arguments? ")" | "." IDENTIFIER)*
     
 ?atom: NUMBER           -> number
      | "-" atom         -> neg
-     | NAME             -> var
+     | IDENTIFIER             -> var
      | "(" expr ")"
      | string
      | num_list
 
 num_list: "[" _sep{NUMBER, ","} "]"
-function       : NAME "(" parameters? ")" block 
-parameters     : NAME ( "," NAME )* 
+function       : IDENTIFIER "(" parameters? ")" block 
+parameters     : IDENTIFIER ( "," IDENTIFIER )* 
 arguments: expr ("," expr )*
 !_comp_op: "<"|">"|"=="|">="|"<="|"<>"|"!=" 
 
@@ -91,7 +93,7 @@ FOR: "for"
 %ignore WS
 %ignore _CPC
 
-%import common.CNAME -> NAME
+%import common.CNAME -> IDENTIFIER
 %import common.NUMBER
 %import common.WS_INLINE
 %import common.WS

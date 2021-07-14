@@ -18,11 +18,15 @@ beartype = "^0.7.1"
 lark-parser = "^0.11.3"
 devtools = "^0.6.1"
 auto-all = "^1.4.1"
+watchgod = "^0.7"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"
 black = "^21.6b0"
 rich = "^10.4.0"
+mypy = "^0.910"
+flake8 = "^3.9.2"
+pylama = "^7.7.1"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
