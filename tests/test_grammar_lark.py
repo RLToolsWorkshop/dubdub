@@ -7,12 +7,24 @@ parser = lark_rules()
 
 for feature in lang_features:
     content, stem = feature.read_text(), feature.stem
-    if stem not in ["datatypes"]:
+    if stem not in [
+        "datatypes",
+        "arithmetic",
+        "variable",
+        "statement",
+        "logical",
+        "control",
+        "compare",
+        "grouping",
+        "inheritence",
+        "functions",
+        "classes-init",
+    ]:
         # if stem in [
         #     "classes",
         #     "classes-init",
         #     "compare",
-        #     "inheritence",
+        #
         #     "closures",
         #     "logical",
         #     "control",
@@ -21,7 +33,7 @@ for feature in lang_features:
         # ]:
         continue
 
-    @test("Test parsing doesn't break rules.")
+    @test(f"Test parsing doesn't break rules: {stem}")
     def test_correct_token_number(name: str = stem, content=content) -> None:
         parser.parse(content)
 

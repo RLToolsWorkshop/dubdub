@@ -1,51 +1,104 @@
-?start: (statement | _NL) *
+?start: (declaration | _NL) *
+
+
+?declaration: class_dec
+            | func_dec 
+            | var_dec
+            | statement
+
+// Declarations
+// Deciding to put declarations all into one place to prevent confusion.
+
+var_dec: "var" IDENTIFIER ("=" expr)? ";" 
+func_dec: "fun" function ";"?
+class_dec: "class" IDENTIFIER ( "<" IDENTIFIER )? "{" function* "}"
+
+
+?statement: end_comma_stmt
+    | for_statement
+    | if_statement
+    | while_statement
+    // | call_stmt
+    | block
+
+?end_comma_stmt: ( simple_statement | print_statement | return_stmt )
+
+// Notice for statements we add a ";" at the end. Because of the recursive na
+?simple_statement:  expr ";"
+?expr: assignment
+return_stmt: "return" expr? ";"
+print_statement: "print" expr ";"
+if_statement: IF "(" expr ")" statement (ELSE statement)? 
+while_statement : WHILE "(" expr ")" statement
+for_statement : FOR "(" (var_dec | simple_statement  | ";") expr? ";" expr? ")" statement
+call_stmt: call ";" ";"
+
+?block: "{" declaration* "}"
 
 
 
+// Assignment operators 
 
-?statement: ( simple_statement | print_statement ) [";"] _NL
+assignment: ( call "." )? IDENTIFIER "=" assignment
+    | logic_or
 
-?simple_statement:  (assign | expr)
 
-assign: NAME "=" complex_expr 
-?expr: complex_expr
+// Primative operators
 
-print_statement: "print" expr 
-
- 
+// Terms and Factors
 
 ?complex_expr: product
     | complex_expr "+" product   -> add
     | complex_expr "-" product   -> sub
 
-?product: atom
-    | product "*" atom  -> mul
-    | product "/" atom  -> div
+?product: call
+    | product "*" call  -> mul
+    | product "/" call  -> div
 
-_separated{x, sep}: x (sep x)*
+?logic_or: (logic_and) ("or" logic_and)* 
+?logic_and: logic_not ("and" logic_not)*
+?logic_not: ("not"| "!") logic_not -> not 
+         | comparison 
+?comparison: complex_expr (_comp_op complex_expr)*
 
-num_list: "[" _separated{NUMBER, ","} "]"
 
+call: atom ("(" arguments? ")" | "." IDENTIFIER)*
+    
 ?atom: NUMBER           -> number
      | "-" atom         -> neg
-     | NAME             -> var
-     | "(" complex_expr ")"
+     | IDENTIFIER             -> var
+     | "(" expr ")"
+     | string
      | num_list
 
-?comparison: expr (_comp_op expr)*
+num_list: "[" _sep{NUMBER, ","} "]"
+function       : IDENTIFIER "(" parameters? ")" block 
+parameters     : IDENTIFIER ( "," IDENTIFIER )* 
+arguments: expr ("," expr )*
+!_comp_op: "<"|">"|"=="|">="|"<="|"<>"|"!=" 
 
-!_comp_op: "<"|">"|"=="|">="|"<="|"<>"|"!="
+string : ESCAPED_STRING
 
+// Core functons
+_sep{x, sep}: x (sep x)*
+
+
+
+IF: "if" 
+ELSE: "else"
+WHILE: "while" 
+FOR: "for" 
 
 %ignore WS_INLINE
+%ignore WS
 %ignore _CPC
 
-%import common.CNAME -> NAME
+%import common.CNAME -> IDENTIFIER
 %import common.NUMBER
 %import common.WS_INLINE
+%import common.WS
 %import common.NEWLINE -> _NL
 %import common.CPP_COMMENT -> _CPC
-%import common.CPP_COMMENT -> _CPC
-
+%import common.ESCAPED_STRING
 
 COMMENT: "#" /[^\n]/*
