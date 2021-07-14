@@ -2,7 +2,7 @@ import abc
 from typing import Any
 
 from dubdub import dataclass
-from dubdub.interpreter import Interpreter
+from dubdub import interpreter as itr
 
 
 @dataclass

@@ -1,9 +1,8 @@
 import abc
 import time
-from ast import Dict
 from datetime import datetime
 from pathlib import Path
-from typing import Any, List, Optional, cast
+from typing import Any, Dict, List, Optional, cast
 
 from loguru import logger
 from rich import print
@@ -33,7 +32,7 @@ CWD_DIR = Path.cwd()
 class __Interpreter(Visitor):
     environment: Optional[Environment] = None
     globals: Environment = Environment()
-    locals: Dict[Expr, int] = field(default_factory={})
+    locals: Dict[Expr, int] = field(default_factory=lambda: {})
 
     def resolve(self, expr: Expr, depth: int):
         self.locals[expr] = depth

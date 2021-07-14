@@ -18,6 +18,7 @@ beartype = "^0.7.1"
 lark-parser = "^0.11.3"
 devtools = "^0.6.1"
 auto-all = "^1.4.1"
+watchgod = "^0.7"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"

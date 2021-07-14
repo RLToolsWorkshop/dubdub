@@ -1,5 +1,5 @@
 import time
-from typing import Optional
+from typing import Any, List, Optional
 
 from auto_all import end_all, start_all
 
@@ -9,6 +9,9 @@ from dubdub.env import Environment
 from dubdub.operations import *
 
 start_all(globals())
+
+
+from dataclasses import dataclass, field  # isort:skip
 
 
 class Clock(DubCallable):

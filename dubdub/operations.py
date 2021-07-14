@@ -8,12 +8,13 @@ from typing import Any, List
 from auto_all import end_all, start_all
 
 from dubdub import dataclass
-from dubdub.nodes import Node, Token
 from dubdub.types import TokenType
 
 CWD_DIR = Path.cwd()
 
 start_all(globals())
+
+from dubdub.nodes import Node, Token  # isort:skip
 
 
 @dataclass
