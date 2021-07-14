@@ -4,6 +4,7 @@ from subprocess import run as rn
 from typing import Optional
 
 import typer
+from loguru import logger
 from watchgod import DefaultDirWatcher, run_process
 
 from dubdub.repl import run_repl
@@ -29,7 +30,10 @@ def ward(
     """
     Run either the an input file or the repl if no file is supplied.
     """
-    run_process(Path.cwd(), run_ward, watcher_cls=DefaultDirWatcher)
+    if input_file is None:
+        input_file = Path.cwd()
+    # logger.info(input_file)
+    run_process(input_file, run_ward, watcher_cls=DefaultDirWatcher)
 
 
 @app.command()
