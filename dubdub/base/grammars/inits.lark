@@ -11,13 +11,14 @@
 
 var_dec: "var" IDENTIFIER ("=" expr)? ";" 
 func_dec: "fun" function ";"?
-class_dec: "class" IDENTIFIER ( "<" IDENTIFIER )? LBRACE function* RBRACE
+class_dec: "class" IDENTIFIER ( "<" IDENTIFIER )? "{" function* "}"
 
 
 ?statement: end_comma_stmt
     | for_statement
     | if_statement
     | while_statement
+    // | call_stmt
     | block
 
 ?end_comma_stmt: ( simple_statement | print_statement | return_stmt )
@@ -27,10 +28,10 @@ class_dec: "class" IDENTIFIER ( "<" IDENTIFIER )? LBRACE function* RBRACE
 ?expr: assignment
 return_stmt: "return" expr? ";"
 print_statement: "print" expr ";"
-if_statement: IF  LPAR expr RPAR statement (ELSE statement)? 
-while_statement : WHILE LPAR expr RPAR statement
+if_statement: IF "(" expr ")" statement (ELSE statement)? 
+while_statement : WHILE "(" expr ")" statement
 for_statement : FOR "(" (var_dec | simple_statement  | ";") expr? ";" expr? ")" statement
-call_stmt: call ";" 
+call_stmt: call ";" ";"
 
 ?block: "{" declaration* "}"
 
@@ -61,36 +62,52 @@ assignment: ( call "." )? IDENTIFIER "=" assignment
 ?comparison: complex_expr (_comp_op complex_expr)*
 
 
-call: atom (LPAR arguments? RPAR | "." IDENTIFIER)*
+call: atom ("(" arguments? ")" | "." IDENTIFIER)*
     
-?atom: primary
-     | prwrap{expr}
+// ?primary: NUMBER       -> number
+//      | "-" atom     -> neg
+//      | IDENTIFIER   -> var
+//      | "(" expr ")"
+//      | string
+//      | num_list
+//      | "super" "." IDENTIFIER
 
+primary: NUMBER       -> number
+     | "-" primary     -> neg
+     | IDENTIFIER   -> var
+     | string
+     | num_list
+     | "super" "." IDENTIFIER
+
+
+num_list: "[" _sep{NUMBER, ","} "]"
+function       : IDENTIFIER "(" parameters? ")" block 
+parameters     : IDENTIFIER ( "," IDENTIFIER )* 
 arguments: expr ("," expr )*
+!_comp_op: "<"|">"|"=="|">="|"<="|"<>"|"!=" 
 
-function       : IDENTIFIER LPAR parameters? RPAR block 
-
+string : ESCAPED_STRING
 
 // Core functons
-// sqwrap{z}: LSQB z (z)* RSQB
-// prwrap{m}: LPAR m (m)* RPAR
+_sep{x, sep}: x (sep x)*
 
 
 
-
+IF: "if" 
+ELSE: "else"
+WHILE: "while" 
+FOR: "for" 
 
 %ignore WS_INLINE
 %ignore WS
 %ignore _CPC
 
-
-
-
-
-
-
-%import .inits (_NL, ESCAPED_STRING, _CPC,NUMBER, WS_INLINE, WS)
-%import .inits (IDENTIFIER, IF,ELSE,WHILE,FOR)
-%import .inits (parameters, string, _comp_op, primary)
+%import common.CNAME -> IDENTIFIER
+%import common.NUMBER
+%import common.WS_INLINE
+%import common.WS
+%import common.NEWLINE -> _NL
+%import common.CPP_COMMENT -> _CPC
+%import common.ESCAPED_STRING
 %import .utilz (sqwrap,prwrap,brcwrap, separate, RPAR,RSQB,RBRACE,LPAR,LSQB,LBRACE)
 COMMENT: "#" /[^\n]/*

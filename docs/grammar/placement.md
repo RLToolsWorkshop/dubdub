@@ -69,7 +69,7 @@ This is only default information telling us to remove whitespace between words, 
 
 **It would seem as if the graph loads information from the bottom, but prioritizes from the parent.**
 
-### Atom
+### Atoms - The absolute primatives
 
 ```dart
 ?atom: NUMBER           -> number
@@ -88,3 +88,7 @@ ELSE: "else"
 // Core functons
 _sep{x, sep}: x (sep x)*
 ```
+
+
+### Logic - So Many Logic Bombs
+

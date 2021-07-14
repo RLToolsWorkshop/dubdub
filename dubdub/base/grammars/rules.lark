@@ -71,22 +71,12 @@ arguments: expr ("," expr )*
 function       : IDENTIFIER LPAR parameters? RPAR block 
 
 
-// Core functons
-// sqwrap{z}: LSQB z (z)* RSQB
-// prwrap{m}: LPAR m (m)* RPAR
-
-
 
 
 
 %ignore WS_INLINE
 %ignore WS
 %ignore _CPC
-
-
-
-
-
 
 
 %import .inits (_NL, ESCAPED_STRING, _CPC,NUMBER, WS_INLINE, WS)

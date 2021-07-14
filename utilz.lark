@@ -1,0 +1,14 @@
+RPAR: ")"
+RSQB: "]"
+RBRACE: "}"
+LPAR: "("
+LSQB: "["
+LBRACE: "{"
+
+// A list of utility functions that will help reduce boilerplate.
+separate{x, sep}: x (sep x)*
+sqwrap{z}: LSQB z (z)* RSQB
+prwrap{m}: LPAR m (m)* RPAR
+brcwrap{m}: LBRACE m (m)* RBRACE
+
+
